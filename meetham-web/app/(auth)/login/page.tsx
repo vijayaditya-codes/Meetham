@@ -9,7 +9,8 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { ShieldAlert, LogIn, ArrowRight } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { ShieldAlert, LogIn, ArrowRight, Sparkles, Mail, Lock } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -53,82 +54,128 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-slate-950 px-4 py-12 relative overflow-hidden">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_60%_at_50%_-20%,rgba(16,185,129,0.15),rgba(255,255,255,0))]"></div>
-      
-      <Card className="w-full max-w-md bg-slate-900/60 border-slate-800 text-white backdrop-blur-xl shadow-2xl relative z-10">
-        <CardHeader className="text-center space-y-2">
-          <Link href="/" className="inline-block">
-            <span className="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-3xl font-black tracking-tight text-transparent">
-              MEETHAM
-            </span>
-          </Link>
-          <CardTitle className="text-2xl font-bold">Welcome Back</CardTitle>
-          <CardDescription className="text-slate-400">
-            Log in to save surplus food and reduce food waste.
-          </CardDescription>
-        </CardHeader>
-        
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
-              <div className="flex items-start gap-2.5 rounded-lg bg-red-500/10 p-3.5 text-sm text-red-400 border border-red-500/20">
-                <ShieldAlert size={18} className="shrink-0 mt-0.5" />
-                <span>{error}</span>
-              </div>
-            )}
-            
-            <div className="space-y-1.5">
-              <Label htmlFor="email" className="text-slate-300 font-medium">Email Address</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="customer@meetham.in"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="bg-slate-950/40 border-slate-800 text-white focus-visible:ring-emerald-500 placeholder:text-slate-600"
-              />
-            </div>
-            
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password" className="text-slate-300 font-medium">Password</Label>
-              </div>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="bg-slate-950/40 border-slate-800 text-white focus-visible:ring-emerald-500 placeholder:text-slate-600"
-              />
-            </div>
-            
-            <Button
-              type="submit"
-              disabled={isLoading}
-              className="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold transition-all mt-6"
-            >
-              {isLoading ? 'Connecting...' : 'Log In'}
-              {!isLoading && <LogIn size={16} className="ml-2" />}
-            </Button>
-          </form>
-        </CardContent>
-        
-        <CardFooter className="flex flex-col gap-3 justify-center text-center text-sm border-t border-slate-800/60 pt-6">
-          <p className="text-slate-400">
-            Don't have an account?{' '}
-            <Link href="/register" className="text-emerald-400 hover:text-emerald-300 font-medium">
-              Create an account
+      {/* Background Glows (Moving animations) */}
+      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+        <motion.div
+          animate={{
+            scale: [1, 1.2, 0.9, 1],
+            x: [0, 30, -30, 0],
+            y: [0, -40, 30, 0],
+          }}
+          transition={{
+            repeat: Infinity,
+            duration: 10,
+            ease: 'easeInOut',
+          }}
+          className="absolute top-1/4 left-1/4 w-80 h-80 rounded-full bg-emerald-500/10 blur-[80px]"
+        />
+        <motion.div
+          animate={{
+            scale: [1.1, 0.9, 1.15, 1.1],
+            x: [0, -30, 40, 0],
+            y: [0, 40, -40, 0],
+          }}
+          transition={{
+            repeat: Infinity,
+            duration: 12,
+            ease: 'easeInOut',
+          }}
+          className="absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full bg-teal-500/10 blur-[90px]"
+        />
+      </div>
+
+      {/* Main card wrapper */}
+      <motion.div
+        initial={{ opacity: 0, y: 40, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ type: 'spring', stiffness: 100, damping: 15 }}
+        className="w-full max-w-md relative z-10"
+      >
+        <Card className="bg-slate-900/40 border border-white/5 text-white backdrop-blur-2xl shadow-[0_0_50px_rgba(16,185,129,0.08)] rounded-3xl overflow-hidden">
+          <CardHeader className="text-center space-y-2 pb-6 border-b border-white/5">
+            <Link href="/" className="inline-block group">
+              <span className="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-3xl font-black tracking-tight text-transparent group-hover:scale-105 transition-transform block">
+                MEETHAM
+              </span>
             </Link>
-          </p>
+            <CardTitle className="text-xl font-bold flex items-center justify-center gap-1.5 mt-2">
+              Welcome Back <Sparkles size={16} className="text-emerald-400 animate-pulse" />
+            </CardTitle>
+            <CardDescription className="text-slate-400 text-xs">
+              Log in to save surplus food and reduce emissions.
+            </CardDescription>
+          </CardHeader>
           
-          <Link href="/" className="inline-flex items-center gap-1 text-xs text-slate-500 hover:text-slate-400">
-            Back to homepage <ArrowRight size={12} />
-          </Link>
-        </CardFooter>
-      </Card>
+          <CardContent className="p-6 pt-8">
+            <form onSubmit={handleSubmit} className="space-y-5">
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex items-start gap-2.5 rounded-2xl bg-red-500/10 p-3.5 text-xs text-red-400 border border-red-500/20"
+                >
+                  <ShieldAlert size={16} className="shrink-0 mt-0.5" />
+                  <span>{error}</span>
+                </motion.div>
+              )}
+              
+              <div className="space-y-1.5">
+                <Label htmlFor="email" className="text-slate-350 font-bold text-xs uppercase tracking-wide flex items-center gap-1.5">
+                  <Mail size={12} className="text-slate-500" /> Email Address
+                </Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="customer@meetham.in"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="bg-slate-950/40 border-slate-800 text-white focus-visible:ring-emerald-500 placeholder:text-slate-700 rounded-xl"
+                />
+              </div>
+              
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password" className="text-slate-350 font-bold text-xs uppercase tracking-wide flex items-center gap-1.5">
+                    <Lock size={12} className="text-slate-500" /> Password
+                  </Label>
+                </div>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="bg-slate-950/40 border-slate-800 text-white focus-visible:ring-emerald-500 placeholder:text-slate-700 rounded-xl"
+                />
+              </div>
+              
+              <Button
+                type="submit"
+                disabled={isLoading}
+                className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-slate-950 font-black py-3 rounded-2xl border-0 mt-6 shadow-[0_0_20px_rgba(16,185,129,0.15)] transition-all"
+              >
+                {isLoading ? 'Connecting...' : 'Log In'}
+                {!isLoading && <LogIn size={16} className="ml-2" />}
+              </Button>
+            </form>
+          </CardContent>
+          
+          <CardFooter className="flex flex-col gap-3 justify-center text-center text-xs border-t border-white/5 p-6 bg-slate-950/20">
+            <p className="text-slate-400">
+              Don't have an account?{' '}
+              <Link href="/register" className="text-emerald-400 hover:text-emerald-300 font-bold transition-colors">
+                Create an account
+              </Link>
+            </p>
+            
+            <Link href="/" className="inline-flex items-center gap-1 text-[10px] text-slate-500 hover:text-slate-400 font-bold uppercase tracking-wider mt-1 transition-colors">
+              Back to homepage <ArrowRight size={10} />
+            </Link>
+          </CardFooter>
+        </Card>
+      </motion.div>
     </div>
   );
 }
