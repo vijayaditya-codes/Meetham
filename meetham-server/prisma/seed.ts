@@ -1,4 +1,4 @@
-import { PrismaClient, Role, ListingStatus, OrderStatus, PaymentStatus, RestaurantStatus } from '@prisma/client';
+import { PrismaClient, Role, ListingStatus, OrderStatus, PaymentStatus, RestaurantStatus, PartnerAvailability } from '@prisma/client';
 import { faker } from '@faker-js/faker';
 import bcrypt from 'bcryptjs';
 
@@ -15,6 +15,10 @@ const LISTING_CATEGORIES = ['Bakery', 'Meals', 'Grocery'];
 async function main() {
   await prisma.$transaction(async (tx) => {
     // Clear existing data (dev seed only)
+    await tx.notification.deleteMany();
+    await tx.deliveryAssignment.deleteMany();
+    await tx.deliveryPartner.deleteMany();
+    await tx.coupon.deleteMany();
     await tx.review.deleteMany();
     await tx.orderItem.deleteMany();
     await tx.order.deleteMany();
@@ -166,9 +170,88 @@ async function main() {
       });
     }
 
+    // ─────────────────────────────────────────────
+    // NEW SEEDS FOR DELIVERY
+    // ─────────────────────────────────────────────
+
+    // Seed 2 delivery partners
+    const rider1User = await tx.user.create({
+      data: {
+        email: 'rider1@meetham.in',
+        name: 'Ramesh Kumar',
+        role: Role.DELIVERY_PARTIER || Role.DELIVERY_PARTNER, // Fallback check
+        passwordHash,
+        phone: '9800000001',
+        isVerified: true,
+      },
+    });
+
+    await tx.deliveryPartner.create({
+      data: {
+        userId: rider1User.id,
+        vehicleType: 'BIKE',
+        licensePlate: 'MH-01-AB-1234',
+        availability: PartnerAvailability.ONLINE,
+        currentLat: 19.0760, // near Spice Route Kitchen
+        currentLng: 72.8777,
+        isVerified: true,
+      },
+    });
+
+    const rider2User = await tx.user.create({
+      data: {
+        email: 'rider2@meetham.in',
+        name: 'Suresh Patil',
+        role: Role.DELIVERY_PARTIER || Role.DELIVERY_PARTNER,
+        passwordHash,
+        phone: '9800000002',
+        isVerified: true,
+      },
+    });
+
+    await tx.deliveryPartner.create({
+      data: {
+        userId: rider2User.id,
+        vehicleType: 'SCOOTER',
+        licensePlate: 'MH-02-CD-5678',
+        availability: PartnerAvailability.ONLINE,
+        currentLat: 19.0825, // near Bombay Bakehouse
+        currentLng: 72.8417,
+        isVerified: true,
+      },
+    });
+
+    // Seed coupons
+    await tx.coupon.createMany({
+      data: [
+        {
+          code: 'SAVE20',
+          description: 'Save 20% on your first order',
+          discountType: 'PERCENT',
+          discountValue: 20.0,
+          minOrderValue: 100.0,
+          maxDiscount: 50.0,
+          validFrom: new Date(),
+          validTo: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+          isActive: true,
+        },
+        {
+          code: 'FLAT50',
+          description: 'Flat ₹50 off on orders above ₹150',
+          discountType: 'FLAT',
+          discountValue: 50.0,
+          minOrderValue: 150.0,
+          validFrom: new Date(),
+          validTo: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+          isActive: true,
+        },
+      ],
+    });
+
     console.log('Seed complete:');
     console.log(`  Admin: ${admin.email} / password123`);
     console.log(`  Customer: ${customer.email} / password123`);
+    console.log(`  Riders: rider1@meetham.in / password123, rider2@meetham.in / password123`);
     console.log(`  Restaurants: ${restaurants.length}`);
     console.log(`  Listings: ${allListings.length}`);
     console.log(`  Completed orders: 2`);

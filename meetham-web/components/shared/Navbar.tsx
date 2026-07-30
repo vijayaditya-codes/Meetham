@@ -7,7 +7,8 @@ import { useCartStore } from '../../lib/zustand/cart-store';
 import { useQuery } from '@tanstack/react-query';
 import api from '../../lib/api/axios';
 import { ShoppingBag, User, LogOut, Shield, LayoutDashboard, UtensilsCrossed } from 'lucide-react';
-import { Button } from '../ui/button';
+import { Button, buttonVariants } from '../ui/button';
+import { cn } from '@/lib/utils';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,6 +18,7 @@ import {
 } from '../ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '../ui/avatar';
 import { Badge } from '../ui/badge';
+import NotificationBell from './NotificationBell';
 
 export default function Navbar() {
   const { user, clearAuth } = useAuthStore();
@@ -84,6 +86,9 @@ export default function Navbar() {
 
         {/* Actions */}
         <div className="flex items-center gap-4">
+          {/* Real-time notifications */}
+          {user && <NotificationBell />}
+
           {/* Customer Cart */}
           {(!user || user.role === 'CUSTOMER') && (
             <button
@@ -102,14 +107,12 @@ export default function Navbar() {
           {/* User Profile / Auth State */}
           {user ? (
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-2 rounded-full focus:outline-none">
-                  <Avatar className="h-9 w-9 border-2 border-slate-200 hover:border-emerald-500 transition-all">
-                    <AvatarFallback className="bg-emerald-600 text-white font-semibold text-sm">
-                      {getInitials(user.name)}
-                    </AvatarFallback>
-                  </Avatar>
-                </button>
+              <DropdownMenuTrigger className="flex items-center gap-2 rounded-full focus:outline-none border-0 p-0 bg-transparent cursor-pointer">
+                <Avatar className="h-9 w-9 border-2 border-slate-200 hover:border-emerald-500 transition-all">
+                  <AvatarFallback className="bg-emerald-600 text-white font-semibold text-sm">
+                    {getInitials(user.name)}
+                  </AvatarFallback>
+                </Avatar>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56 bg-white border border-slate-200">
                 <div className="flex flex-col px-4 py-2">
@@ -123,13 +126,13 @@ export default function Navbar() {
                 
                 {user.role === 'CUSTOMER' && (
                   <>
-                    <DropdownMenuItem asChild>
-                      <Link href="/orders" className="flex items-center gap-2 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50">
+                    <DropdownMenuItem className="p-0">
+                      <Link href="/orders" className="w-full flex items-center gap-2 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50">
                         My Orders
                       </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link href="/profile" className="flex items-center gap-2 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50">
+                    <DropdownMenuItem className="p-0">
+                      <Link href="/profile" className="w-full flex items-center gap-2 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50">
                         Profile Settings
                       </Link>
                     </DropdownMenuItem>
@@ -138,13 +141,13 @@ export default function Navbar() {
 
                 {user.role === 'RESTAURANT' && (
                   <>
-                    <DropdownMenuItem asChild>
-                      <Link href="/vendor/dashboard" className="flex items-center gap-2 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50">
+                    <DropdownMenuItem className="p-0">
+                      <Link href="/vendor/dashboard" className="w-full flex items-center gap-2 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50">
                         Dashboard
                       </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link href="/vendor/listings" className="flex items-center gap-2 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50">
+                    <DropdownMenuItem className="p-0">
+                      <Link href="/vendor/listings" className="w-full flex items-center gap-2 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50">
                         Manage Listings
                       </Link>
                     </DropdownMenuItem>
@@ -152,8 +155,8 @@ export default function Navbar() {
                 )}
 
                 {user.role === 'ADMIN' && (
-                  <DropdownMenuItem asChild>
-                    <Link href="/admin/dashboard" className="flex items-center gap-2 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50">
+                  <DropdownMenuItem className="p-0">
+                    <Link href="/admin/dashboard" className="w-full flex items-center gap-2 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50">
                       Overview Stats
                     </Link>
                   </DropdownMenuItem>
@@ -168,12 +171,12 @@ export default function Navbar() {
             </DropdownMenu>
           ) : (
             <div className="flex items-center gap-2">
-              <Button variant="ghost" asChild className="hidden sm:inline-flex text-slate-600">
-                <Link href="/login">Login</Link>
-              </Button>
-              <Button asChild className="bg-emerald-600 text-white hover:bg-emerald-700">
-                <Link href="/register">Sign Up</Link>
-              </Button>
+              <Link href="/login" className={cn(buttonVariants({ variant: 'ghost' }), "hidden sm:inline-flex text-slate-600 font-medium")}>
+                Login
+              </Link>
+              <Link href="/register" className={cn(buttonVariants({ variant: 'default' }), "bg-emerald-600 text-white hover:bg-emerald-700 font-medium")}>
+                Sign Up
+              </Link>
             </div>
           )}
         </div>

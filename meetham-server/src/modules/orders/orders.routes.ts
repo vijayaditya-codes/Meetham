@@ -12,6 +12,7 @@ router.use(authenticate);
 
 router.get('/', ordersController.getOrders);
 router.get('/:id', ordersController.getOrderById);
+router.get('/:id/track', ordersController.getOrderTracking);
 router.post('/cancel/:id', ordersController.cancelOrder); // POST /orders/cancel/:id or POST /orders/:id/cancel. Let's support both or match roadmap: POST /orders/:id/cancel. Let's make it router.post('/:id/cancel')
 router.post('/:id/cancel', ordersController.cancelOrder);
 

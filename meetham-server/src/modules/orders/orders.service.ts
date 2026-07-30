@@ -1,9 +1,11 @@
 import { prisma } from '../../config/db';
-import { OrderStatus, PaymentStatus, Prisma, Role } from '@prisma/client';
+import { OrderStatus, PaymentStatus, Prisma, Role, FulfillmentType } from '@prisma/client';
 import { NotFoundError, BadRequestError, ForbiddenError } from '../../utils/errors';
 import { decrementStockTransaction } from '../listings/listings.service';
 import { generateOTP } from '../../utils/otp-generator';
 import { toDecimal, toNumber } from '../../utils/decimal-helpers';
+import { getHaversineDistance } from '../../utils/geo-distance';
+import { triggerRiderAssignment } from '../delivery-assignments/assignment.service';
 
 export async function checkout(
   userId: string,
@@ -11,6 +13,9 @@ export async function checkout(
     paymentMethod: string;
     pickupWindowFrom?: string;
     pickupWindowTo?: string;
+    fulfillmentType?: 'PICKUP' | 'DELIVERY';
+    deliveryAddressId?: string;
+    couponCode?: string;
   }
 ) {
   return prisma.$transaction(async (tx) => {
@@ -57,13 +62,82 @@ export async function checkout(
       }
     }
 
-    // 3. Math calculations
-    const platformFeeVal = subtotal * (commissionRate / 100);
-    const totalAmountVal = subtotal + platformFeeVal;
+    // Delivery Fee calculation
+    let deliveryFee = 0;
+    if (data.fulfillmentType === 'DELIVERY') {
+      if (!data.deliveryAddressId) {
+        throw new BadRequestError('Delivery address is required for delivery.');
+      }
+      const address = await tx.address.findUnique({
+        where: { id: data.deliveryAddressId },
+      });
+      if (!address || address.userId !== userId) {
+        throw new NotFoundError('Delivery address not found.');
+      }
+      const distance = getHaversineDistance(
+        restaurant.latitude,
+        restaurant.longitude,
+        address.latitude,
+        address.longitude
+      );
+      // base fee ₹30, + ₹10 per km
+      deliveryFee = 30 + 10 * distance;
+    }
 
-    const subtotalDec = toDecimal(subtotal);
+    // Coupon verification
+    let discountAmount = 0;
+    if (data.couponCode) {
+      const coupon = await tx.coupon.findUnique({
+        where: { code: data.couponCode.toUpperCase() },
+      });
+
+      if (!coupon || !coupon.isActive) {
+        throw new BadRequestError('INVALID_CODE');
+      }
+
+      const now = new Date();
+      if (coupon.validFrom > now || coupon.validTo < now) {
+        throw new BadRequestError('EXPIRED');
+      }
+
+      if (coupon.minOrderValue && subtotal < toNumber(coupon.minOrderValue)) {
+        throw new BadRequestError('MIN_ORDER_NOT_MET');
+      }
+
+      if (coupon.usageLimit && coupon.usedCount >= coupon.usageLimit) {
+        throw new BadRequestError('USAGE_LIMIT_REACHED');
+      }
+
+      const val = toNumber(coupon.discountValue);
+      if (coupon.discountType === 'PERCENT') {
+        discountAmount = subtotal * (val / 100);
+        if (coupon.maxDiscount && discountAmount > toNumber(coupon.maxDiscount)) {
+          discountAmount = toNumber(coupon.maxDiscount);
+        }
+      } else if (coupon.discountType === 'FLAT') {
+        discountAmount = val;
+      }
+
+      if (discountAmount > subtotal) {
+        discountAmount = subtotal;
+      }
+
+      // Increment coupon used count
+      await tx.coupon.update({
+        where: { id: coupon.id },
+        data: { usedCount: { increment: 1 } },
+      });
+    }
+
+    // Math calculations
+    const subtotalAfterDiscount = Math.max(0, subtotal - discountAmount);
+    const platformFeeVal = subtotalAfterDiscount * (commissionRate / 100);
+    const totalAmountVal = subtotalAfterDiscount + platformFeeVal + deliveryFee;
+
+    const subtotalDec = toDecimal(subtotalAfterDiscount);
     const platformFeeDec = toDecimal(platformFeeVal);
     const totalAmountDec = toDecimal(totalAmountVal);
+    const deliveryFeeDec = toDecimal(deliveryFee);
 
     // 4. Generate OTP pickup code
     const pickupCode = generateOTP();
@@ -78,7 +152,7 @@ export async function checkout(
         customerId: userId,
         restaurantId,
         status: OrderStatus.PLACED,
-        paymentStatus: data.paymentMethod === 'COD' ? PaymentStatus.PENDING : PaymentStatus.PENDING,
+        paymentStatus: PaymentStatus.PENDING,
         paymentMethod: data.paymentMethod,
         subtotal: subtotalDec,
         platformFee: platformFeeDec,
@@ -86,15 +160,11 @@ export async function checkout(
         pickupCode,
         pickupWindowFrom,
         pickupWindowTo,
+        fulfillmentType: data.fulfillmentType || 'PICKUP',
+        deliveryAddressId: data.fulfillmentType === 'DELIVERY' ? data.deliveryAddressId : null,
+        deliveryFee: deliveryFeeDec,
         items: {
           create: orderItemsData,
-        },
-      },
-      include: {
-        items: {
-          include: {
-            listing: true,
-          },
         },
       },
     });
@@ -139,6 +209,17 @@ export async function getOrders(userId: string, role: Role) {
         },
         items: {
           include: { listing: true },
+        },
+        assignment: {
+          include: {
+            partner: {
+              include: {
+                user: {
+                  select: { id: true, name: true, phone: true },
+                },
+              },
+            },
+          },
         },
       },
       orderBy: { createdAt: 'desc' },
@@ -236,6 +317,11 @@ export async function updateOrderStatus(id: string, userId: string, newStatus: O
     await returnStock(order.items);
   }
 
+  // Trigger Rider Auto-Assignment for delivery orders once confirmed
+  if (newStatus === OrderStatus.CONFIRMED && updatedOrder.fulfillmentType === 'DELIVERY') {
+    triggerRiderAssignment(updatedOrder.id);
+  }
+
   return updatedOrder;
 }
 
@@ -328,4 +414,42 @@ async function returnStock(items: any[]) {
       },
     });
   }
+}
+
+export async function getOrderTracking(id: string, userId: string) {
+  const order = await prisma.order.findUnique({
+    where: { id },
+    include: {
+      restaurant: {
+        select: { id: true, name: true, ownerId: true, address: true, latitude: true, longitude: true },
+      },
+      deliveryAddress: {
+        select: { id: true, label: true, line1: true, line2: true, city: true, latitude: true, longitude: true },
+      },
+      assignment: {
+        include: {
+          partner: {
+            include: {
+              user: {
+                select: { id: true, name: true, phone: true, avatarUrl: true, role: true },
+              },
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (!order) {
+    throw new NotFoundError('Order not found.');
+  }
+
+  // Authorize check: only customer, restaurant owner, or admin can track
+  if (order.customerId !== userId && order.restaurant.ownerId !== userId) {
+    if (!order.assignment || order.assignment.partner.userId !== userId) {
+      throw new ForbiddenError('You do not have permission to track this order.');
+    }
+  }
+
+  return order;
 }

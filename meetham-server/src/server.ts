@@ -5,6 +5,7 @@ dotenv.config();
 import app from './app';
 import { prisma } from './config/db';
 import { startExpireListingsJob } from './jobs/expire-listings.cron';
+import { initializeSockets } from './sockets';
 
 const PORT = process.env.PORT || 4000;
 
@@ -16,6 +17,9 @@ const server = app.listen(PORT, () => {
   
   // Start Background Job Scheduler
   startExpireListingsJob();
+  
+  // Mount Socket.io
+  initializeSockets(server);
 });
 
 // Graceful shutdown hooks

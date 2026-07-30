@@ -14,6 +14,10 @@ import reviewsRouter from './modules/reviews/reviews.routes';
 import adminRouter from './modules/admin/admin.routes';
 import uploadsRouter from './modules/uploads/uploads.routes';
 import usersRouter from './modules/users/users.routes';
+import couponsRouter from './modules/coupons/coupons.routes';
+import notificationsRouter from './modules/notifications/notifications.routes';
+import deliveryPartnersRouter from './modules/delivery-partners/delivery-partners.routes';
+import deliveryAssignmentsRouter from './modules/delivery-assignments/delivery-assignments.routes';
 
 import { errorHandler } from './middleware/error-handler';
 import { NotFoundError } from './utils/errors';
@@ -48,6 +52,10 @@ app.use('/api/v1/payments', paymentsRouter);
 app.use('/api/v1/reviews', reviewsRouter);
 app.use('/api/v1/admin', adminRouter);
 app.use('/api/v1/uploads', uploadsRouter);
+app.use('/api/v1/coupons', couponsRouter);
+app.use('/api/v1/notifications', notificationsRouter);
+app.use('/api/v1/delivery-partners', deliveryPartnersRouter);
+app.use('/api/v1/delivery-assignments', deliveryAssignmentsRouter);
 
 // Catch 404
 app.use((req, res, next) => {

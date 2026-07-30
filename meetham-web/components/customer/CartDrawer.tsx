@@ -2,11 +2,11 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { useCartStore } from '../../lib/zustand/cart-store';
+import { useCartStore } from '@/lib/zustand/cart-store';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import api from '../../lib/api/axios';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '../ui/sheet';
-import { Button } from '../ui/button';
+import api from '@/lib/api/axios';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
+import { Button } from '@/components/ui/button';
 import { ShoppingCart, Plus, Minus, Trash2, ShieldCheck, ArrowRight, Loader2 } from 'lucide-react';
 
 export default function CartDrawer() {

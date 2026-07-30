@@ -88,3 +88,16 @@ export async function cancelOrder(req: AuthenticatedRequest, res: Response, next
     next(error);
   }
 }
+
+export async function getOrderTracking(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const userId = req.user!.userId;
+    const order = await ordersService.getOrderTracking(req.params.id as string, userId);
+    res.status(200).json({
+      status: 'success',
+      data: { order },
+    });
+  } catch (error) {
+    next(error);
+  }
+}

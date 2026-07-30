@@ -5,6 +5,9 @@ export const checkoutSchema = z.object({
   paymentMethod: z.enum(['UPI', 'CARD', 'COD']).default('UPI'),
   pickupWindowFrom: z.string().optional(),
   pickupWindowTo: z.string().optional(),
+  fulfillmentType: z.enum(['PICKUP', 'DELIVERY']).default('PICKUP'),
+  deliveryAddressId: z.string().optional(),
+  couponCode: z.string().optional(),
 });
 
 export const updateStatusSchema = z.object({

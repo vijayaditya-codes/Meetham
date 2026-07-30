@@ -5,7 +5,8 @@ import Link from 'next/link';
 import Navbar from '../components/shared/Navbar';
 import { motion } from 'framer-motion';
 import { ArrowRight, Leaf, ShieldAlert, Award, Compass, ShoppingBag, Clock } from 'lucide-react';
-import { Button } from '../components/ui/button';
+import { Button, buttonVariants } from '../components/ui/button';
+import { cn } from '@/lib/utils';
 
 export default function LandingPage() {
   return (
@@ -53,16 +54,12 @@ export default function LandingPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.3 }}
             >
-              <Button size="lg" className="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-600 text-slate-900 font-bold" asChild>
-                <Link href="/discover">
-                  Discover Food Near Me <ArrowRight size={18} className="ml-2" />
-                </Link>
-              </Button>
-              <Button size="lg" className="w-full sm:w-auto text-white border border-slate-700 hover:bg-slate-800 bg-transparent hover:text-emerald-400 font-medium" asChild>
-                <Link href="/restaurant-signup">
-                  Register Restaurant Profile
-                </Link>
-              </Button>
+              <Link href="/discover" className={cn(buttonVariants({ size: 'lg' }), "w-full sm:w-auto bg-emerald-500 hover:bg-emerald-600 text-slate-900 font-bold flex items-center justify-center")}>
+                Discover Food Near Me <ArrowRight size={18} className="ml-2" />
+              </Link>
+              <Link href="/restaurant-signup" className={cn(buttonVariants({ size: 'lg' }), "w-full sm:w-auto text-white border border-slate-700 hover:bg-slate-800 bg-transparent hover:text-emerald-400 font-medium flex items-center justify-center")}>
+                Register Restaurant Profile
+              </Link>
             </motion.div>
           </div>
         </div>

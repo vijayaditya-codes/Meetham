@@ -1,17 +1,17 @@
 'use client';
 
 import React, { useState } from 'react';
-import Navbar from '../../../components/shared/Navbar';
+import Navbar from '@/components/shared/Navbar';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import api from '../../../lib/api/axios';
-import { useLocationStore } from '../../../lib/zustand/location-store';
-import { useCartStore } from '../../../lib/zustand/cart-store';
-import { useAuthStore } from '../../../lib/zustand/auth-store';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '../../../components/ui/card';
-import { Badge } from '../../../components/ui/badge';
-import { Button } from '../../../components/ui/button';
-import { Input } from '../../../components/ui/input';
-import { Tabs, TabsList, TabsTrigger } from '../../../components/ui/tabs';
+import api from '@/lib/api/axios';
+import { useLocationStore } from '@/lib/zustand/location-store';
+import { useCartStore } from '@/lib/zustand/cart-store';
+import { useAuthStore } from '@/lib/zustand/auth-store';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Search, MapPin, Clock, Tag, ShoppingCart, Loader2, Sparkles } from 'lucide-react';
 
 export default function DiscoverPage() {

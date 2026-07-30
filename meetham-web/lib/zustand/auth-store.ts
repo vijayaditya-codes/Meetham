@@ -5,7 +5,7 @@ export interface User {
   id: string;
   email: string;
   name: string;
-  role: 'CUSTOMER' | 'RESTAURANT' | 'ADMIN';
+  role: 'CUSTOMER' | 'RESTAURANT' | 'ADMIN' | 'DELIVERY_PARTNER';
   phone?: string;
   isVerified: boolean;
 }
